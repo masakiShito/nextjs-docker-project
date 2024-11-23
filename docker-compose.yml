@@ -1,0 +1,47 @@
+version: '3'
+
+services:
+  web:
+    build: .
+    platform: linux/arm64  # M1 Mac用の設定
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./next-project:/app  # プロジェクトのマウントポイント
+    environment:
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=true
+      - DATABASE_URL=mysql://user:password@db:3306/nextjs_db
+    depends_on:
+      - db
+    tty: true
+    stdin_open: true
+
+  db:
+    image: mysql:8.0
+    platform: linux/arm64
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: nextjs_db
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    ports:
+      - "8080:80"
+    environment:
+      - PMA_HOST=db
+      - PMA_USER=root
+      - PMA_PASSWORD=rootpassword
+    depends_on:
+      - db
+
+volumes:
+  mysql_data:
